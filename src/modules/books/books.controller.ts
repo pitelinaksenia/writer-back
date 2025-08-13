@@ -10,12 +10,13 @@ import {
     HttpStatus,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
-import { AddBookFormData, BookDataWithActionStatus } from './book-types';
+import * as bookTypes from './book-types';
 import {Book} from "./entities/book.entity";
 
 @Controller('books')
 export class BooksController {
-    constructor(private readonly booksService: BooksService) {}
+    constructor(private readonly booksService: BooksService) {
+    }
 
     @Get()
     async getAll(): Promise<Book[]> {
@@ -28,14 +29,14 @@ export class BooksController {
     }
 
     @Post()
-    async create(@Body() bookData: AddBookFormData): Promise<Book> {
+    async create(@Body() bookData: bookTypes.CreateBookDto): Promise<Book> {
         return await this.booksService.addBook(bookData);
     }
 
     @Put(':id')
     async update(
         @Param('id') id: string,
-        @Body() bookData: BookDataWithActionStatus,
+        @Body() bookData: bookTypes.BookDataWithActionStatus,
     ): Promise<Book> {
         return await this.booksService.updateBook({ ...bookData, id });
     }

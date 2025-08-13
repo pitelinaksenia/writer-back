@@ -6,8 +6,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Book } from './entities/book.entity';
 import {StorageService} from "../storage/storage.service";
-import {BookDataWithActionStatus} from "./book-types";
 import {FileEditAction} from "../../common/enums/file-edit-action.enum";
+import {CreateBookDto} from "./dto/create-book.dto";
 
 
 @Injectable()
@@ -22,8 +22,8 @@ export class BooksService {
         try {
             const books = await this.bookRepo.find();
             for (const book of books) {
-                if (book.coverPath) {
-                    book.coverPath = await this.storageService.getFileURL(book.coverPath, this.storageService.getCoverBucket());
+                if (book.coverKey) {
+                    book.coverKey = await this.storageService.getFileURL(book.coverKey, this.storageService.getCoverBucket());
                 }
             }
             return books;
@@ -33,7 +33,7 @@ export class BooksService {
         }
     }
 
-    async addBook(bookData: AddBookFormData): Promise<Book> {
+    async addBook(bookData: CreateBookDto): Promise<Book> {
         let coverPath: string | null = null;
         let sourcePath: string | null = null;
 
@@ -74,11 +74,11 @@ export class BooksService {
         if (!book) throw new NotFoundException(`Книга с id ${bookId} не найдена`);
 
         try {
-            if (book.coverPath) {
-                await this.storageService.deleteFile(this.storageService.getCoverBucket(), book.coverPath);
+            if (book.coverKey) {
+                await this.storageService.deleteFile(this.storageService.getCoverBucket(), book.coverKey);
             }
-            if (book.sourcePath) {
-                await this.storageService.deleteFile(this.storageService.getBookBucket(), book.sourcePath);
+            if (book.sourceKey) {
+                await this.storageService.deleteFile(this.storageService.getBookBucket(), book.sourceKey);
             }
             await this.bookRepo.delete(bookId);
             return true;
@@ -93,20 +93,20 @@ export class BooksService {
         if (!book) throw new NotFoundException(`Книга с id ${bookData.id} не найдена`);
 
         try {
-            book.coverPath = await this.handleFileEditAction(
+            book.coverKey = await this.handleFileEditAction(
                 book.id,
                 bookData.coverActionStatus ?? FileEditAction.Keep,
                 bookData.cover ?? null,
                 this.storageService.getCoverBucket(),
-                book.coverPath
+                book.coverKey
             );
 
-            book.sourcePath = await this.handleFileEditAction(
+            book.sourceKey = await this.handleFileEditAction(
                 book.id,
                 bookData.sourceActionStatus ?? FileEditAction.Keep,
                 bookData.source ?? null,
                 this.storageService.getBookBucket(),
-                book.sourcePath
+                book.sourceKey
             );
 
             book.title = bookData.title;
@@ -126,11 +126,11 @@ export class BooksService {
             const book = await this.bookRepo.findOne({ where: { id: bookId } });
             if (!book) throw new NotFoundException(`Книга с id ${bookId} не найдена`);
 
-            if (book.coverPath) {
-                book.coverPath = await this.storageService.getFileURL(book.coverPath, this.storageService.getCoverBucket());
+            if (book.coverKey) {
+                book.coverKey = await this.storageService.getFileURL(book.coverKey, this.storageService.getCoverBucket());
             }
-            if (book.sourcePath) {
-                book.sourcePath = await this.storageService.getFileURL(book.sourcePath, this.storageService.getBookBucket());
+            if (book.sourceKey) {
+                book.sourceKey = await this.storageService.getFileURL(book.sourceKey, this.storageService.getBookBucket());
             }
 
             return book;

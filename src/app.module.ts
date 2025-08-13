@@ -9,10 +9,10 @@ import {BooksModule} from "./modules/books/books.module";
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT, 10) || 5432,
+      port: parseInt(process.env.DB_PORT ?? '5432' , 10),
       username: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASS || 'password',
-      database: process.env.DB_NAME || 'mydatabase',
+      password: process.env.DB_PASS || 'pass',
+      database: process.env.DB_NAME || 'db',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),

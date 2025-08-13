@@ -18,8 +18,8 @@ export class Book {
     year: string;
 
     @Column({ nullable: true })
-    coverPath: string;
+    coverKey: string;
 
     @Column({ nullable: true })
-    sourcePath: string;
+    sourceKey: string;
 }
