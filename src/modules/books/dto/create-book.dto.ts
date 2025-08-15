@@ -1,5 +1,4 @@
 import { IsNotEmpty, IsString} from 'class-validator';
-import {FileEditAction} from "../../../common/enums/file-edit-action.enum";
 
 export class CreateBookDto {
 
@@ -24,14 +23,3 @@ export class CreateBookDto {
     source: File | null;
 }
 
-// export interface GetBookDto {
-//     id: string;
-// }
-//
-// export interface BookDataWithActionStatus extends CreateBookDto {
-//     id: string;
-//     coverPath?: string;
-//     sourcePath?: string;
-//     coverActionStatus?: FileEditAction;
-//     sourceActionStatus?: FileEditAction;
-// }

@@ -10,12 +10,18 @@ import {
     HttpStatus,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
-import * as bookTypes from './book-types';
 import {Book} from "./entities/book.entity";
+import {CreateBookDto} from "./dto/create-book.dto";
+import {UpdateBookDto} from "./dto/update-book.dto";
 
 @Controller('books')
 export class BooksController {
     constructor(private readonly booksService: BooksService) {
+    }
+
+    @Post()
+    async create(@Body() bookData: CreateBookDto): Promise<Book> {
+        return await this.booksService.createBook(bookData);
     }
 
     @Get()
@@ -28,15 +34,10 @@ export class BooksController {
         return await this.booksService.getBookDetails(id);
     }
 
-    @Post()
-    async create(@Body() bookData: bookTypes.CreateBookDto): Promise<Book> {
-        return await this.booksService.addBook(bookData);
-    }
-
     @Put(':id')
     async update(
         @Param('id') id: string,
-        @Body() bookData: bookTypes.BookDataWithActionStatus,
+        @Body() bookData: UpdateBookDto,
     ): Promise<Book> {
         return await this.booksService.updateBook({ ...bookData, id });
     }
