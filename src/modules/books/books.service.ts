@@ -89,23 +89,18 @@ export class BooksService {
     }
 
     async deleteBook(bookId: string): Promise<boolean> {
-        return true;
-        // const book = await this.bookRepo.findOne({ where: { id: bookId } });
-        // if (!book) throw new NotFoundException(`Книга с id ${bookId} не найдена`);
-        //
-        // try {
-        //     if (book.coverKey) {
-        //         await this.storageService.deleteFile(this.storageService.getCoverBucket(), book.coverKey);
-        //     }
-        //     if (book.sourceKey) {
-        //         await this.storageService.deleteFile(this.storageService.getBookBucket(), book.sourceKey);
-        //     }
-        //     await this.bookRepo.delete(bookId);
-        //     return true;
-        // } catch (error) {
-        //     console.error('Ошибка при удалении книги:', error);
-        //     throw new InternalServerErrorException('Не удалось удалить книгу');
-        // }
+        const book = await this.bookRepo.findOne({ where: { id: bookId } });
+        if (!book) throw new NotFoundException(`Книга с id ${bookId} не найдена`);
+
+            if (book.coverKey) {
+                await this.storageService.deleteFile(this.storageService.getCoverBucket(), book.coverKey)
+            }
+
+            if (book.sourceKey) {
+                await this.storageService.deleteFile(this.storageService.getBookBucket(), book.sourceKey);
+            }
+            await this.bookRepo.delete(bookId);
+            return true;
     }
 
     async updateBook(bookData: UpdateBookDto): Promise<Book> {
