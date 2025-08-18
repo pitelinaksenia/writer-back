@@ -8,11 +8,15 @@ import {
     Body,
     HttpCode,
     HttpStatus,
+    UploadedFiles,
+    UseInterceptors,
 } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { BooksService } from './books.service';
 import {Book} from "./entities/book.entity";
 import {CreateBookDto} from "./dto/create-book.dto";
 import {UpdateBookDto} from "./dto/update-book.dto";
+import {BookResponseDto} from "./dto/book-response.dto";
 
 @Controller('books')
 export class BooksController {
@@ -20,12 +24,27 @@ export class BooksController {
     }
 
     @Post()
-    async create(@Body() bookData: CreateBookDto): Promise<Book> {
-        return await this.booksService.createBook(bookData);
+    @UseInterceptors(
+        FileFieldsInterceptor([
+            { name: 'cover', maxCount: 1 },
+            { name: 'source', maxCount: 1 },
+        ]),
+    )
+    async create(
+        @Body() bookData: CreateBookDto,
+        @UploadedFiles()
+        files: { cover?: Express.Multer.File[]; source?: Express.Multer.File[] },
+    ): Promise<Book> {
+        return await this.booksService.createBook(
+            bookData,
+            files.cover?.[0] ?? null,
+            files.source?.[0] ?? null,
+        );
     }
 
+
     @Get()
-    async getAll(): Promise<Book[]> {
+    async getAll(): Promise<BookResponseDto[]> {
         return await this.booksService.getBooks();
     }
 

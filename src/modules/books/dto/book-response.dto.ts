@@ -6,17 +6,17 @@ export class BookResponseDto {
     title: string;
 
     @Column({ nullable: true })
-    description: string;
+    description: string | null;
 
     @Column()
     author: string;
 
     @Column({ nullable: true })
-    year: string;
+    year: string | null;
 
     @Column({ nullable: true })
-    coverURL: string;
+    coverURL: string | null;
 
     @Column({ nullable: true })
-    sourceURL: string;
+    sourceURL: string | null;
 }

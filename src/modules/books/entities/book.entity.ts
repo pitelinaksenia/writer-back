@@ -9,17 +9,17 @@ export class Book {
     title: string;
 
     @Column({ nullable: true })
-    description: string;
+    description: string | null;
 
     @Column()
     author: string;
 
     @Column({ nullable: true })
-    year: string;
+    year: string | null;
 
     @Column({ nullable: true })
-    coverKey: string;
+    coverKey: string | null;
 
     @Column({ nullable: true })
-    sourceKey: string;
+    sourceKey: string | null;
 }

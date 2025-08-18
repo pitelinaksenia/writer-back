@@ -16,10 +16,5 @@ export class CreateBookDto {
     @IsString()
     year: string | null;
 
-    @IsString()
-    cover: File | null;
-
-    @IsString()
-    source: File | null;
 }
 

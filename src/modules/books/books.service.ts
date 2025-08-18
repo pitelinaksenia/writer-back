@@ -59,42 +59,33 @@ export class BooksService {
     }
 
 
-    async createBook(bookData: CreateBookDto): Promise<Book> {
-        const books = await this.bookRepo.find();
+    async createBook(bookData: CreateBookDto,
+                     cover: Express.Multer.File | null,
+                     source: Express.Multer.File | null
+    ): Promise<Book> {
 
-        let coverPath: string | null = null;
-        let sourcePath: string | null = null;
+        const newBook: Book = this.bookRepo.create(bookData);
 
-        try {
-            if (bookData.cover && bookData.cover instanceof File) {
-                coverPath = bookData.id;
-                if (!(await this.storageService.addFile(bookData.cover, this.storageService.getCoverBucket(), coverPath))) {
-                    throw new BadRequestException('Не удалось загрузить обложку');
-                }
+        if (cover) {
+            const coverKey = newBook.id;
+            let result = await this.storageService.addFile(cover, this.storageService.getCoverBucket(), coverKey);
+            if (!result) {
+                throw new BadRequestException('Не удалось загрузить обложку');
             }
-
-            if (bookData.source) {
-                sourcePath = bookData.id;
-                if (!(await this.storageService.addFile(bookData.source, this.storageService.getBookBucket(), sourcePath))) {
-                    if (coverPath) await this.storageService.deleteFile(this.storageService.getCoverBucket(), coverPath);
-                    throw new BadRequestException('Не удалось загрузить файл книги');
-                }
-            }
-
-            const newBook = this.bookRepo.create({
-                title: bookData.title,
-                author: bookData.author,
-                description: bookData.description,
-                year: bookData.year,
-                coverPath,
-                sourcePath,
-            });
-
-            return await this.bookRepo.save(newBook);
-        } catch (error) {
-            console.error('Ошибка при добавлении книги:', error);
-            throw error instanceof BadRequestException ? error : new InternalServerErrorException('Ошибка сервера при добавлении книги');
         }
+
+        if (source) {
+            const sourceKey = newBook.id;
+            let result = await this.storageService.addFile(source, this.storageService.getBookBucket(), sourceKey);
+            if (!result) {
+                if (newBook.coverKey) {
+                    await this.storageService.deleteFile(this.storageService.getCoverBucket(), newBook.coverKey);
+                }
+                throw new BadRequestException('Не удалось загрузить файл книги');
+            }
+        }
+
+        return await this.bookRepo.save(newBook);
     }
 
     async deleteBook(bookId: string): Promise<boolean> {
@@ -189,6 +180,5 @@ export class BooksService {
         }
         return filePath;
     }
-
 
 }
