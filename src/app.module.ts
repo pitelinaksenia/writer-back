@@ -1,19 +1,22 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import {BooksModule} from "./modules/books/books.module";
+import { BooksModule } from './modules/books/books.module';
+import { Book } from './modules/books/entities/book.entity';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      envFilePath: '.env',
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT ?? '5432' , 10),
+      port: parseInt(process.env.DB_PORT ?? '5432', 10),
       username: process.env.DB_USER || 'postgres',
       password: process.env.DB_PASS || 'pass',
       database: process.env.DB_NAME || 'db',
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
+      entities: [Book],
       synchronize: true,
     }),
 

@@ -1,25 +1,25 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity()
+@Entity('books')
 export class Book {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @Column()
-    title: string;
+  @Column()
+  title: string;
 
-    @Column({ nullable: true })
-    description: string | null;
+  @Column({ type: 'text', nullable: true })
+  description: string | null;
 
-    @Column()
-    author: string;
+  @Column()
+  author: string;
 
-    @Column({ nullable: true })
-    year: string | null;
+  @Column({ type: 'text', nullable: true })
+  year: string | null;
 
-    @Column({ nullable: true })
-    coverKey: string | null;
+  @Column({ type: 'text', nullable: true })
+  coverKey: string | null;
 
-    @Column({ nullable: true })
-    sourceKey: string | null;
+  @Column({ type: 'text', nullable: true })
+  sourceKey: string | null;
 }
