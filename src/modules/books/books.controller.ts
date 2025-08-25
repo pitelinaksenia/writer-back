@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Put,
   Delete,
   Param,
   Body,
@@ -18,12 +17,15 @@ import { Book } from './entities/book.entity';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { BookResponseDto } from './dto/book-response.dto';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @Controller('books')
+@ApiTags('Books')
 export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create book' })
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'cover', maxCount: 1 },
@@ -43,16 +45,19 @@ export class BooksController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get books' })
   async getAll(): Promise<BookResponseDto[]> {
     return await this.booksService.getBooks();
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get Book Details' })
   async getOne(@Param('id') id: string): Promise<Book> {
     return await this.booksService.getBookDetails(id);
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update book' })
   @UseInterceptors(FilesInterceptor('files'))
   async update(
     @Param('id') id: string,
@@ -69,6 +74,7 @@ export class BooksController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete book' })
   @HttpCode(HttpStatus.NO_CONTENT) // 204 No Content
   async delete(@Param('id') id: string): Promise<void> {
     await this.booksService.deleteBook(id);

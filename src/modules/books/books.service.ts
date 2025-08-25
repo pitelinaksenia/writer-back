@@ -12,6 +12,7 @@ import { FileEditAction } from '../../common/enums/file-edit-action.enum';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { BookResponseDto } from './dto/book-response.dto';
+import { ApiTags } from '@nestjs/swagger';
 
 @Injectable()
 export class BooksService {
