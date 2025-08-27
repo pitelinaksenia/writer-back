@@ -12,7 +12,7 @@ import { FileEditAction } from '../../common/enums/file-edit-action.enum';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { BookResponseDto } from './dto/book-response.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class BooksService {
@@ -24,33 +24,25 @@ export class BooksService {
 
   async getBooks(): Promise<BookResponseDto[]> {
     const books = await this.bookRepo.find();
-    const booksResponse: BookResponseDto[] = [];
 
-    for (const book of books) {
-      let coverUrl = book.coverKey;
-      if (book.coverKey) {
-        book.coverKey = await this.storageService.getFileURL(
-          book.coverKey,
-          this.storageService.getCoverBucket(),
-        );
-      }
-      let sourceUrl = book.sourceKey;
-      if (book.sourceKey) {
-        book.sourceKey = await this.storageService.getFileURL(
-          book.sourceKey,
-          this.storageService.getBookBucket(),
-        );
-      }
+    return Promise.all(
+      books.map(async ({ coverKey, sourceKey, ...rest }) => {
+        const [coverURL, sourceURL] = await Promise.all([
+          coverKey
+            ? this.storageService.getFileURL(coverKey, this.storageService.getCoverBucket())
+            : null,
+          sourceKey
+            ? this.storageService.getFileURL(sourceKey, this.storageService.getBookBucket())
+            : null,
+        ]);
 
-      const { coverKey, sourceKey, ...rest } = book;
-
-      booksResponse.push({
-        ...rest,
-        coverURL: coverUrl,
-        sourceURL: sourceUrl,
-      });
-    }
-    return booksResponse;
+        return {
+          ...rest,
+          coverURL,
+          sourceURL,
+        };
+      }),
+    );
   }
 
   async createBook(
@@ -58,38 +50,46 @@ export class BooksService {
     cover: Express.Multer.File | null,
     source: Express.Multer.File | null,
   ): Promise<Book> {
-    const newBook: Book = this.bookRepo.create(bookData);
+    const newBook: Book = this.bookRepo.create({
+      ...bookData,
+      id: uuidv4(),
+    });
+
+    const tasks: Promise<void>[] = [];
 
     if (cover) {
-      const coverKey = newBook.id;
-      let result = await this.storageService.addFile(
-        cover,
-        this.storageService.getCoverBucket(),
-        coverKey,
+      newBook.coverKey = newBook.id;
+      tasks.push(
+        this.storageService
+          .addFile(cover, this.storageService.getCoverBucket(), newBook.coverKey)
+          .then((ok) => {
+            if (!ok) throw new BadRequestException('Не удалось загрузить обложку');
+          }),
       );
-      if (!result) {
-        throw new BadRequestException('Не удалось загрузить обложку');
-      }
     }
 
     if (source) {
-      const sourceKey = newBook.id;
-      let result = await this.storageService.addFile(
-        source,
-        this.storageService.getBookBucket(),
-        sourceKey,
+      newBook.sourceKey = newBook.id;
+      tasks.push(
+        this.storageService
+          .addFile(source, this.storageService.getBookBucket(), newBook.sourceKey)
+          .then((ok) => {
+            if (!ok) throw new BadRequestException('Не удалось загрузить файл книги');
+          }),
       );
-      if (!result) {
-        if (newBook.coverKey) {
-          await this.storageService.deleteFile(
-            this.storageService.getCoverBucket(),
-            newBook.coverKey,
-          );
-        }
-        throw new BadRequestException('Не удалось загрузить файл книги');
-      }
     }
 
+    try {
+      await Promise.all(tasks);
+    } catch (error) {
+      if (newBook.coverKey) {
+        await this.storageService.deleteFile(
+          this.storageService.getCoverBucket(),
+          newBook.coverKey,
+        );
+      }
+      throw error;
+    }
     return await this.bookRepo.save(newBook);
   }
 
@@ -97,13 +97,15 @@ export class BooksService {
     const book = await this.bookRepo.findOne({ where: { id: bookId } });
     if (!book) throw new NotFoundException(`Книга с id ${bookId} не найдена`);
 
-    if (book.coverKey) {
-      await this.storageService.deleteFile(this.storageService.getCoverBucket(), book.coverKey);
-    }
+    await Promise.all([
+      book.coverKey
+        ? this.storageService.deleteFile(this.storageService.getCoverBucket(), bookId)
+        : Promise.resolve(),
 
-    if (book.sourceKey) {
-      await this.storageService.deleteFile(this.storageService.getBookBucket(), book.sourceKey);
-    }
+      book.sourceKey
+        ? this.storageService.deleteFile(this.storageService.getCoverBucket(), bookId)
+        : Promise.resolve(),
+    ]);
     await this.bookRepo.delete(bookId);
     return true;
   }
@@ -116,22 +118,33 @@ export class BooksService {
     if (!book) throw new NotFoundException(`Книга с id ${bookData.id} не найдена`);
 
     try {
-      book.coverKey = await this.handleFileEditAction(
-        book.id,
-        bookData.coverActionStatus ?? FileEditAction.Keep,
-        files.cover,
-        this.storageService.getCoverBucket(),
-        book.coverKey,
+      const tasks: Promise<void>[] = [];
+
+      tasks.push(
+        this.handleFileEditAction(
+          book.id,
+          bookData.coverActionStatus ?? FileEditAction.Keep,
+          files.cover,
+          this.storageService.getCoverBucket(),
+          book.coverKey,
+        ).then((key) => {
+          book.coverKey = key;
+        }),
       );
 
-      book.sourceKey = await this.handleFileEditAction(
-        book.id,
-        bookData.sourceActionStatus ?? FileEditAction.Keep,
-        files.source,
-
-        this.storageService.getBookBucket(),
-        book.sourceKey,
+      tasks.push(
+        this.handleFileEditAction(
+          book.id,
+          bookData.sourceActionStatus ?? FileEditAction.Keep,
+          files.source,
+          this.storageService.getBookBucket(),
+          book.sourceKey,
+        ).then((key) => {
+          book.sourceKey = key;
+        }),
       );
+
+      await Promise.all(tasks);
 
       book.title = bookData.title;
       book.author = bookData.author;
@@ -145,24 +158,27 @@ export class BooksService {
     }
   }
 
-  async getBookDetails(bookId: string): Promise<Book> {
+  async getBookDetails(bookId: string): Promise<BookResponseDto> {
     const book = await this.bookRepo.findOne({ where: { id: bookId } });
     if (!book) throw new NotFoundException(`Книга с id ${bookId} не найдена`);
 
-    if (book.coverKey) {
-      book.coverKey = await this.storageService.getFileURL(
-        book.coverKey,
-        this.storageService.getCoverBucket(),
-      );
-    }
-    if (book.sourceKey) {
-      book.sourceKey = await this.storageService.getFileURL(
-        book.sourceKey,
-        this.storageService.getBookBucket(),
-      );
-    }
+    const [coverURL, sourceURL] = await Promise.all([
+      book.coverKey
+        ? this.storageService.getFileURL(book.coverKey, this.storageService.getCoverBucket())
+        : null,
 
-    return book;
+      book.sourceKey
+        ? this.storageService.getFileURL(book.sourceKey, this.storageService.getBookBucket())
+        : null,
+    ]);
+
+    const { coverKey, sourceKey, ...rest } = book;
+
+    return {
+      ...rest,
+      coverURL,
+      sourceURL,
+    };
   }
 
   private async handleFileEditAction(

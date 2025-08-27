@@ -24,7 +24,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
-  @Post()
+  @Post('create')
   @ApiOperation({ summary: 'Create book' })
   @UseInterceptors(
     FileFieldsInterceptor([
@@ -44,7 +44,7 @@ export class BooksController {
     );
   }
 
-  @Get()
+  @Get('getAll')
   @ApiOperation({ summary: 'Get books' })
   async getAll(): Promise<BookResponseDto[]> {
     return await this.booksService.getBooks();
@@ -52,7 +52,7 @@ export class BooksController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get Book Details' })
-  async getOne(@Param('id') id: string): Promise<Book> {
+  async getOne(@Param('id') id: string): Promise<BookResponseDto> {
     return await this.booksService.getBookDetails(id);
   }
 
