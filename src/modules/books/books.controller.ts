@@ -65,7 +65,7 @@ export class BooksController {
     @UploadedFiles() files: { cover?: Express.Multer.File[]; source?: Express.Multer.File[] },
   ): Promise<Book> {
     return await this.booksService.updateBook(
-      { ...bookData, id }, // только DTO + id
+      { ...bookData, id }, 
       {
         cover: files.cover?.[0] ?? null,
         source: files.source?.[0] ?? null,
