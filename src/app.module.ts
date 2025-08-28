@@ -1,10 +1,26 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
+import { BooksModule } from './modules/books/books.module';
+import { Book } from './modules/books/entities/book.entity';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ConfigModule.forRoot({
+      envFilePath: '.env',
+    }),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT ?? '5432', 10),
+      username: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASS || 'pass',
+      database: process.env.DB_NAME || 'db',
+      entities: [Book],
+      synchronize: true,
+    }),
+
+    BooksModule,
+  ],
 })
 export class AppModule {}
