@@ -75,7 +75,7 @@ export class BooksController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete book' })
-  @HttpCode(HttpStatus.NO_CONTENT) // 204 No Content
+  @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id') id: string): Promise<void> {
     await this.booksService.deleteBook(id);
   }
