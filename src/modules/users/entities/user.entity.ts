@@ -1,4 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinTable,
+  OneToMany,
+  ManyToMany,
+} from 'typeorm';
+import { Role } from '../../roles/entity/roles.entity';
 
 @Entity('users')
 export class User {
@@ -10,4 +19,8 @@ export class User {
 
   @Column({ type: 'text' })
   passHash: string;
+
+  @ManyToMany(() => Role, (role) => role.users, { cascade: true })
+  @JoinTable({ name: 'users_roles' })
+  roles: Role[];
 }
