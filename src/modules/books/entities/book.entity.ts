@@ -1,25 +1,33 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('books')
 export class Book {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+    @ApiProperty()
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
-  @Column()
-  title: string;
+    @ApiProperty()
+    @Column()
+    title: string;
 
-  @Column({ type: 'text', nullable: true })
-  description: string | null;
+    @ApiProperty()
+    @Column({ type: 'text', nullable: true })
+    description: string | null;
 
-  @Column()
-  author: string;
+    @ApiProperty()
+    @Column()
+    author: string;
 
-  @Column({ type: 'text', nullable: true })
-  year: string | null;
+    @ApiProperty()
+    @Column({ type: 'text', nullable: true })
+    year: string | null;
 
-  @Column({ type: 'text', nullable: true })
-  coverKey: string | null;
+    @ApiProperty()
+    @Column({ type: 'text', nullable: true })
+    coverKey: string | null;
 
-  @Column({ type: 'text', nullable: true })
-  sourceKey: string | null;
+    @ApiProperty()
+    @Column({ type: 'text', nullable: true })
+    sourceKey: string | null;
 }

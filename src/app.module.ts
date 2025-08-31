@@ -7,31 +7,31 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { User } from './modules/users/entities/user.entity';
-import { Role } from './modules/roles/entity/roles.entity';
+import { Role } from './modules/roles/entity/role.entity';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      envFilePath: '.env',
-    }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT ?? '5432', 10),
-      username: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASS || 'pass',
-      database: process.env.DB_NAME || 'db',
-      entities: [Book, User, Role],
-      synchronize: true,
-    }),
+    imports: [
+        ConfigModule.forRoot({
+            envFilePath: '.env',
+        }),
+        TypeOrmModule.forRoot({
+            type: 'postgres',
+            host: process.env.DB_HOST || 'localhost',
+            port: parseInt(process.env.DB_PORT ?? '5432', 10),
+            username: process.env.DB_USER || 'postgres',
+            password: process.env.DB_PASS || 'pass',
+            database: process.env.DB_NAME || 'db',
+            entities: [Book, User, Role],
+            synchronize: true,
+        }),
 
-    BooksModule,
+        BooksModule,
 
-    AuthModule,
+        AuthModule,
 
-    UsersModule,
+        UsersModule,
 
-    RolesModule,
-  ],
+        RolesModule,
+    ],
 })
 export class AppModule {}

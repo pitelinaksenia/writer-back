@@ -1,12 +1,12 @@
 import { Column } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateUserDto {
+export class CreateRoleDto {
     @ApiProperty()
     @Column()
-    login: string;
+    value: string;
 
     @ApiProperty()
     @Column()
-    password: string;
+    description: string;
 }

@@ -1,26 +1,31 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinTable,
-  OneToMany,
-  ManyToMany,
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    ManyToOne,
+    JoinTable,
+    OneToMany,
+    ManyToMany,
 } from 'typeorm';
-import { Role } from '../../roles/entity/roles.entity';
+import { Role } from '../../roles/entity/role.entity';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+    @ApiProperty()
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
-  @Column({ type: 'text', unique: true })
-  login: string;
+    @ApiProperty()
+    @Column({ type: 'text', unique: true })
+    login: string;
 
-  @Column({ type: 'text' })
-  passHash: string;
+    @ApiProperty()
+    @Column({ type: 'text' })
+    passHash: string;
 
-  @ManyToMany(() => Role, (role) => role.users, { cascade: true })
-  @JoinTable({ name: 'users_roles' })
-  roles: Role[];
+    @ApiProperty()
+    @ManyToMany(() => Role, (role) => role.users, { cascade: true })
+    @JoinTable({ name: 'users_roles' })
+    roles: Role[];
 }
